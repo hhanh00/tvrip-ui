@@ -27,37 +27,45 @@ namespace tvrip_ui
         }
     }
 
-    public class Disk
+    public class Disk : INotifyPropertyChanged
     {
+        private string _Image;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public Disk(string name, Guid guid)
+        {
+            Guid = guid;
+            Name = name;
+            FirstEpisode = 1;
+            FirstTitle = 1;
+            Season = 1;
+            Image = "";
+        }
+
+        public Guid Guid { get; private set; }
         public string Name { get; set; }
-        public int FirstEpisodeNumber { get; set; }
-    }
-
-    public class Episode : DependencyObject
-    {
-        public static readonly DependencyProperty NameProperty = DependencyProperty.Register("Name", typeof(string), typeof(Episode), new UIPropertyMetadata(null));
-
-        public Disk Disk
+        public int Season { get; set; }
+        public int FirstEpisode { get; set; }
+        public int FirstTitle { get; set; }
+        public bool IsMultiTrack { get; set; }
+        public List<string> Audio { get; set; }
+        public List<string> Subtitles { get; set; }
+        public List<string> Episodes { get; set; }
+        public string Image 
         {
-            get; set;
-        }
-
-        public string Name 
-        {
-            get { return (string)GetValue(NameProperty); }
-            set { SetValue(NameProperty, value); }
-        }
-
-        public int Index
-        {
-            get; set;
-        }
-
-        public string Number
-        {
-            get
+            get { return _Image; }
+            set
             {
-                return (Disk.FirstEpisodeNumber + Index).ToString();
+                _Image = value;
+                NotifyPropertyChanged("Image");
+            }
+        }
+
+        private void NotifyPropertyChanged(String info)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(info));
             }
         }
     }
@@ -65,21 +73,20 @@ namespace tvrip_ui
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class DiskContent : Window
+    public partial class DiskContentWindow : Window
     {
-        Disk _Disk = new Disk();
-        DataTable _EpisodeListTable = new DataTable();
-        DataTable _AudioTable = new DataTable();
-        DataTable _SubtitleTable = new DataTable();
+        private Disk _Disk;
+        private DataTable _EpisodeListTable = new DataTable();
+        private DataTable _AudioTable = new DataTable();
+        private DataTable _SubtitlesTable = new DataTable();
  
-        public DiskContent()
+        public DiskContentWindow(Disk disk)
         {
-            _Disk.Name = "Two and a Half Men";
-            _Disk.FirstEpisodeNumber = 10;
+            _Disk = disk;
 
-            _SubtitleTable.Columns.Add(new DataColumn("Language", typeof(string)));
-            DataRow row = _SubtitleTable.NewRow();
-            _SubtitleTable.Rows.Add(row);
+            _SubtitlesTable.Columns.Add(new DataColumn("Language", typeof(string)));
+            DataRow row = _SubtitlesTable.NewRow();
+            _SubtitlesTable.Rows.Add(row);
             row["Language"] = "English";
 
             _AudioTable.Columns.Add(new DataColumn("Language", typeof(string)));
@@ -99,6 +106,12 @@ namespace tvrip_ui
             InitializeComponent();
         }
 
+        public Disk Disk
+        {
+            get { return _Disk; }
+            set { _Disk = value; }
+        }
+
         public DataTable EpisodeListTable
         {
             get { return _EpisodeListTable; }
@@ -111,7 +124,7 @@ namespace tvrip_ui
 
         public DataTable SubtitleListTable
         {
-            get { return _SubtitleTable; }
+            get { return _SubtitlesTable; }
         }
 
         private void MoveTo(int oldIndex, int newIndex)
@@ -139,6 +152,47 @@ namespace tvrip_ui
             if (selectedIndex >= 0 && selectedIndex < EpisodeListTable.Rows.Count - 1)
             {
                 MoveTo(selectedIndex, selectedIndex + 1);
+            }
+        }
+
+        private void OnBrowse(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+
+            // Set filter for file extension and default file extension
+            dlg.DefaultExt = ".iso";
+            dlg.Filter = "Disk Image (.iso)|*.iso";
+
+            // Display OpenFileDialog by calling ShowDialog method
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Get the selected file name and display in a TextBox
+            if (result == true)
+            {
+                // Open document
+                string filename = dlg.FileName;
+                _Disk.Image = filename;
+            }
+        }
+
+        private void OnClosed(object sender, EventArgs e)
+        {
+            _Disk.Audio = new List<string>();
+            foreach (DataRow row in _AudioTable.Rows)
+            {
+                _Disk.Audio.Add((string)row["Language"]);
+            }
+
+            _Disk.Subtitles = new List<string>();
+            foreach (DataRow row in _SubtitlesTable.Rows)
+            {
+                _Disk.Subtitles.Add((string)row["Language"]);
+            }
+
+            _Disk.Episodes = new List<string>();
+            foreach (DataRow row in _EpisodeListTable.Rows)
+            {
+                _Disk.Episodes.Add((string)row["Name"]);
             }
         }
     }

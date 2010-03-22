@@ -1,0 +1,26 @@
+﻿<Window x:Class="tvrip_ui.Disks"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dg="http://schemas.microsoft.com/wpf/2008/toolkit"
+    x:Name="This"
+    Title="Disks" Height="300" Width="300">
+    <StackPanel>
+        <Button Name="Break" Content="Break" Click="Break_Click"/>
+        <dg:DataGrid Name="DiskGrid" ItemsSource="{Binding ElementName=This, Path=Table}"
+                             CanUserAddRows="True" CanUserDeleteRows="True"
+                             CanUserResizeRows="False" CanUserSortColumns="False"
+                             AutoGenerateColumns="False"
+                             RowEditEnding="DiskGrid_RowEditEnding">
+            <dg:DataGrid.Columns>
+                <dg:DataGridTextColumn Header="Name" Binding="{Binding Path=Name}"/>
+                <dg:DataGridTemplateColumn  MinWidth="100" Header="View">
+                    <dg:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="Button_Click">View Details</Button>
+                        </DataTemplate>
+                    </dg:DataGridTemplateColumn.CellTemplate>
+                </dg:DataGridTemplateColumn>
+            </dg:DataGrid.Columns>
+        </dg:DataGrid>
+    </StackPanel>
+</Window>
