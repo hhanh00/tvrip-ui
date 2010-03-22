@@ -2,32 +2,22 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:diskcontent="clr-namespace:tvrip_ui"
+    xmlns:dg="http://schemas.microsoft.com/wpf/2008/toolkit"
+    x:Name="This"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
-    Title="Disk Content" Height="300" Width="740">
+    Title="Disk Content" Height="500" Width="656">
     <Window.Resources>
-        <diskcontent:BoolToVisibilityConverter x:Key="boolToVis" />
-        <Style TargetType="{x:Type TextBlock}" x:Key="GridBlockStyle">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Visibility" Value="{Binding Path=IsSelected, 
-                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}, 
-                Converter={StaticResource boolToVis}, ConverterParameter=False}" />
-        </Style>
-        <Style TargetType="{x:Type FrameworkElement}" x:Key="GridEditStyle">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Visibility" Value="{Binding Path=IsSelected, 
-                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}, 
-                Converter={StaticResource boolToVis}, ConverterParameter=True}" />
-        </Style>
+        <diskcontent:Languages x:Key="languages" />
     </Window.Resources>
     <StackPanel Orientation="Horizontal">
         <GroupBox Header="Disk Information" Width="300" Margin="2,2,2,2">
+            <StackPanel>
             <Grid Margin="4,4,4,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="24"/>
                     <RowDefinition Height="24"/>
                     <RowDefinition Height="24"/>
                     <RowDefinition Height="24"/>
@@ -42,28 +32,46 @@
                 <Label Grid.Row="3" Grid.Column="0">First Episode</Label>
                 <TextBox Grid.Row="3" Grid.Column="1">1</TextBox>
             </Grid>
+            <GroupBox Header="Audio">
+                    <dg:DataGrid Name="AudioGrid" ItemsSource="{Binding ElementName=This, Path=AudioListTable}"
+                             CanUserAddRows="True" CanUserDeleteRows="True"
+                             CanUserResizeRows="False" CanUserSortColumns="False"
+                             AutoGenerateColumns="False">
+                        <dg:DataGrid.Columns>
+                            <dg:DataGridComboBoxColumn Width="*" Header="Language" x:Name="LanguageCombo"
+                                                       ItemsSource="{StaticResource languages}"
+                                                       SelectedItemBinding="{Binding Path=Language}"/>
+                        </dg:DataGrid.Columns>
+                    </dg:DataGrid>
+            </GroupBox>
+            <GroupBox Header="Subtitles">
+                    <dg:DataGrid Name="SubtitleGrid" ItemsSource="{Binding ElementName=This, Path=SubtitleListTable}"
+                             CanUserAddRows="True" CanUserDeleteRows="True"
+                             CanUserResizeRows="False" CanUserSortColumns="False"
+                             AutoGenerateColumns="False">
+                        <dg:DataGrid.Columns>
+                            <dg:DataGridComboBoxColumn Width="*" Header="Language"
+                                                       ItemsSource="{StaticResource languages}"
+                                                       SelectedItemBinding="{Binding Path=Language}"/>
+                        </dg:DataGrid.Columns>
+                    </dg:DataGrid>
+            </GroupBox>
+            </StackPanel>
         </GroupBox>
-        <GroupBox Header="Episode List" Margin="2,2,2,2">
+        <GroupBox Margin="2,2,2,2">
+            <GroupBox.Header>
+                <CheckBox Name="MultiTrack" Content="Multi episodes/tracks" Margin="10,10,0,10" />
+            </GroupBox.Header>
             <StackPanel>
-                <CheckBox Name="MultiTrack" Content="Multi episodes/tracks" Margin="10,10,0,10" TabIndex="35" />
-        <ListView Name="DiskContentView" ItemsSource="{Binding EpisodeList}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Width="80" Header="Number" DisplayMemberBinding="{Binding Number}" />
-                    <GridViewColumn Width="300">
-                        <GridViewColumnHeader Tag="Name" Content="Name" />
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <TextBlock Text="{Binding Path=Name}" Style="{StaticResource GridBlockStyle}" />
-                                    <TextBox Text="{Binding Path=Name}" Style="{StaticResource GridEditStyle}" />
-                                </Grid>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+                <dg:DataGrid IsEnabled="{Binding ElementName=MultiTrack, Path=IsChecked}" Name="EpisodeListGrid" ItemsSource="{Binding ElementName=This, Path=EpisodeListTable}" Margin="5"
+                    CanUserAddRows="True" CanUserDeleteRows="True"
+                    CanUserResizeRows="False" CanUserSortColumns="False"
+                    AutoGenerateColumns="False">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Width="300" Binding="{Binding Name}" Header="Episode Name" />
+                    </dg:DataGrid.Columns>
+                    
+                </dg:DataGrid>
         <StackPanel HorizontalAlignment="Right" Margin="5,5,5,5" >
             <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
                 <StackPanel.Resources>
@@ -71,7 +79,6 @@
                         <Setter Property="Margin" Value="5,0,0,0" />
                     </Style>
                 </StackPanel.Resources>
-                <Button Name="AddRowButton" Content="Add Row" Click="AddRow_Click" />
                 <Button Name="UpButton" Content="Move Up" Click="Up_Click" />
                 <Button Name="DownButton" Content="Move Down" Click="Down_Click" />
             </StackPanel>

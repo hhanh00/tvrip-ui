@@ -13,32 +13,24 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 
 namespace tvrip_ui
 {
+    public class Languages : ObservableCollection<string>
+    {
+        public Languages()
+        {
+            Add("English");
+            Add("French");
+            Add("Spanish");
+        }
+    }
+
     public class Disk
     {
         public string Name { get; set; }
         public int FirstEpisodeNumber { get; set; }
-    }
-
-    public class BoolToVisibilityConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType,
-            object parameter, System.Globalization.CultureInfo culture)
-        {
-            bool param = bool.Parse(parameter as string);
-            bool val = (bool)value;
-
-            return val == param ?
-              Visibility.Visible : Visibility.Hidden;
-        }
-
-        public object ConvertBack(object value, Type targetType,
-            object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class Episode : DependencyObject
@@ -76,55 +68,77 @@ namespace tvrip_ui
     public partial class DiskContent : Window
     {
         Disk _Disk = new Disk();
-        BindingList<Episode> _EpisodeList = new BindingList<Episode>();
+        DataTable _EpisodeListTable = new DataTable();
+        DataTable _AudioTable = new DataTable();
+        DataTable _SubtitleTable = new DataTable();
  
         public DiskContent()
         {
             _Disk.Name = "Two and a Half Men";
             _Disk.FirstEpisodeNumber = 10;
-            _EpisodeList.Add(new Episode { Disk = _Disk, Name = "Back Off, Mary Poppins", Index = 0 });
-            _EpisodeList.Add(new Episode { Disk = _Disk, Name = "Enjoy Those Garlic Balls", Index = 1 });
+
+            _SubtitleTable.Columns.Add(new DataColumn("Language", typeof(string)));
+            DataRow row = _SubtitleTable.NewRow();
+            _SubtitleTable.Rows.Add(row);
+            row["Language"] = "English";
+
+            _AudioTable.Columns.Add(new DataColumn("Language", typeof(string)));
+            row = _AudioTable.NewRow();
+            _AudioTable.Rows.Add(row);
+            row["Language"] = "English";
+
+            _EpisodeListTable.Columns.Add(new DataColumn("Name", typeof(string)));
+            row = _EpisodeListTable.NewRow();
+            _EpisodeListTable.Rows.Add(row);
+            row["Name"] = "Back Off, Mary Poppins";
+
+            row = _EpisodeListTable.NewRow();
+            _EpisodeListTable.Rows.Add(row);
+            row["Name"] = "Enjoy Those Garlic Balls";
 
             InitializeComponent();
         }
 
-        public BindingList<Episode> EpisodeList
+        public DataTable EpisodeListTable
         {
-            get { return _EpisodeList; }
+            get { return _EpisodeListTable; }
         }
 
-        private void AddRow_Click(object sender, RoutedEventArgs e)
+        public DataTable AudioListTable
         {
-            _EpisodeList.Add(new Episode { Disk = _Disk, Name = "New Episode", Index = _EpisodeList.Count });
+            get { return _AudioTable; }
+        }
+
+        public DataTable SubtitleListTable
+        {
+            get { return _SubtitleTable; }
+        }
+
+        private void MoveTo(int oldIndex, int newIndex)
+        {
+            DataRow selectedRow = _EpisodeListTable.Rows[oldIndex];
+            DataRow newRow = _EpisodeListTable.NewRow();
+            newRow.ItemArray = selectedRow.ItemArray;
+            _EpisodeListTable.Rows.Remove(selectedRow);
+            _EpisodeListTable.Rows.InsertAt(newRow, newIndex);
+            EpisodeListGrid.SelectedIndex = newIndex;
         }
 
         private void Up_Click(object sender, RoutedEventArgs e)
         {
-            int selectedIndex = DiskContentView.SelectedIndex;
+            int selectedIndex = EpisodeListGrid.SelectedIndex;
             if (selectedIndex > 0)
             {
-                _EpisodeList[selectedIndex].Index--;
-                _EpisodeList[selectedIndex - 1].Index++;
-                Episode episode = _EpisodeList[selectedIndex];
-                _EpisodeList.RemoveAt(selectedIndex);
-                _EpisodeList.Insert(selectedIndex - 1, episode);
-                _EpisodeList.ResetItem(selectedIndex);
-                DiskContentView.SelectedIndex = selectedIndex - 1;
+                MoveTo(selectedIndex, selectedIndex - 1);
             }
         }
 
         private void Down_Click(object sender, RoutedEventArgs e)
         {
-            int selectedIndex = DiskContentView.SelectedIndex;
-            if (selectedIndex < _EpisodeList.Count - 1)
+            int selectedIndex = EpisodeListGrid.SelectedIndex;
+            if (selectedIndex >= 0 && selectedIndex < EpisodeListTable.Rows.Count - 1)
             {
-                _EpisodeList[selectedIndex].Index++;
-                _EpisodeList[selectedIndex + 1].Index--;
-                Episode episode = _EpisodeList[selectedIndex];
-                _EpisodeList.RemoveAt(selectedIndex);
-                _EpisodeList.Insert(selectedIndex + 1, episode);
-                _EpisodeList.ResetItem(selectedIndex);
-                DiskContentView.SelectedIndex = selectedIndex + 1;
+                MoveTo(selectedIndex, selectedIndex + 1);
             }
         }
     }
